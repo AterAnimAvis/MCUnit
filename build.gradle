@@ -1,0 +1,284 @@
+//<editor-fold defaultstate="collapsed" desc="<<< Imports >>>">
+import com.hierynomus.gradle.license.tasks.LicenseCheck
+import com.hierynomus.gradle.license.tasks.LicenseFormat
+
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="<<< Setup >>>">
+buildscript {
+  repositories {
+    maven { url = 'https://files.minecraftforge.net/maven' }
+    jcenter()
+    mavenCentral()
+  }
+  dependencies {
+    classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+  }
+}
+
+//<editor-fold defaultstate="collapsed" desc="<<< Apply Plugins >>>">
+plugins {
+  //noinspection SpellCheckingInspection
+  id 'com.github.hierynomus.license' version '0.15.0'
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+//</editor-fold>
+
+/* Needed so eclipse task generates correctly. */
+//<editor-fold defaultstate="collapsed" desc="<<< Set Compatibility to Java 8 >>>">
+sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="<<< Print JVM Information >>>">
+println('Java: ' + System.getProperty('java.version') +
+        ' JVM: ' +
+        System.getProperty('java.vm.version') +
+        '(' +
+        System.getProperty('java.vendor') +
+        ') Arch: ' +
+        System.getProperty('os.arch'))
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="<<< Add Generated Resource Directory >>>">
+sourceSets.main.resources.srcDirs += "src/generated/resources"
+//</editor-fold>
+
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="<<< Configuration >>>">
+version = '1.0.0-alpha'
+group = 'ateranimavis.mc_unit'
+archivesBaseName = 'mc_unit_example'
+
+def VENDOR = 'ateranimavis'
+def MOD_ID = archivesBaseName
+def SPEC_VERSION = '1'
+
+def MCP_CHANNEL = 'snapshot'
+def MCP_VERSION = '20200822-1.15.1'
+def FORGE_VERSION = '1.15.2-31.2.36'
+
+//noinspection SpellCheckingInspection
+def FORGE_MARKERS = 'SCAN,REGISTRIES,REGISTRYDUMP'
+def FORGE_LEVEL = 'debug'
+
+def TEST_FORGE_MARKERS = 'NONE'
+/* Technically can be blank I think? */
+def TEST_FORGE_LEVEL = 'debug'
+
+def WORKING_DIRECTORY = project.file('run')
+def IS_MULTI_PROJECT = false
+
+//<editor-fold defaultstate="collapsed" desc="<<< Print Mod Information >>>">
+println('Mod: ' + archivesBaseName + ' Version: ' + version + ' Forge: ' + FORGE_VERSION + ' Mappings: ' + MCP_VERSION)
+//</editor-fold>
+
+minecraft {
+  mappings channel: MCP_CHANNEL, version: MCP_VERSION
+
+  // accessTransformer = file('src/main/resources/META-INF/access-transformer.cfg')
+
+  //<editor-fold defaultstate="collapsed" desc="<<< Run Configurations >>>">
+  def SOURCE_SET_MAIN = ((sourceSets as SourceSetContainer).getByName('main'))
+  runs {
+    //<editor-fold defaultstate="collapsed" desc="<<< Client >>>">
+    client {
+      workingDirectory WORKING_DIRECTORY
+
+      property 'forge.logging.markers', FORGE_MARKERS
+      property 'forge.logging.console.level', FORGE_LEVEL
+
+      mods {
+        mod {
+          source SOURCE_SET_MAIN
+        }
+      }
+    }
+    //</editor-fold>
+
+    //<editor-fold defaultstate="collapsed" desc="<<< Server >>>">
+    server {
+      workingDirectory WORKING_DIRECTORY
+
+      property 'forge.logging.markers', FORGE_MARKERS
+      property 'forge.logging.console.level', FORGE_LEVEL
+
+      mods {
+        mod {
+          source SOURCE_SET_MAIN
+        }
+      }
+    }
+    //</editor-fold>
+
+    //<editor-fold defaultstate="collapsed" desc="<<< Data >>>">
+    data {
+      workingDirectory WORKING_DIRECTORY
+
+      property 'forge.logging.markers', FORGE_MARKERS
+      property 'forge.logging.console.level', FORGE_LEVEL
+
+      args '--mod', MOD_ID, '--all', '--output', file('src/generated/resources/')
+
+      mods {
+        mod {
+          source SOURCE_SET_MAIN
+        }
+      }
+    }
+    //</editor-fold>
+  }
+  //</editor-fold>
+}
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="<<< Dependencies >>>">
+dependencies {
+  /* Minecraft Dependency */
+  minecraft "net.minecraftforge:forge:$FORGE_VERSION"
+
+  /* JUnit Testing - TODO: JUnit5 */
+  testImplementation group: 'junit', name: 'junit', version: '4.13'
+
+  /* Cucumber Testing */
+  testImplementation group: 'io.cucumber', name: 'cucumber-junit', version: '6.6.0'
+  /* TODO: test the lambda api from cucumber-java8 */
+  testImplementation group: 'io.cucumber', name: 'cucumber-java', version: '6.6.0'
+
+  /* Cucumber Reporting */
+  testImplementation group: 'net.masterthought', name: 'cucumber-reporting', version: '5.3.1'
+}
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="<<< Artifacts >>>">
+jar {
+  manifest {
+    //noinspection SpellCheckingInspection
+    attributes([
+            'Specification-Title'     : project.archivesBaseName,
+            'Specification-Vendor'    : VENDOR,
+            'Specification-Version'   : SPEC_VERSION,
+            'Implementation-Title'    : project.name,
+            'Implementation-Version'  : project.version,
+            'Implementation-Vendor'   : VENDOR,
+            'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+    ])
+  }
+
+  preserveFileTimestamps = false
+  reproducibleFileOrder = true
+}
+
+//<editor-fold defaultstate="collapsed" desc="<<< Prevent Java 8 strict doc lint failing builds >>>">
+if (JavaVersion.current().isJava8Compatible()) {
+  tasks.withType(Javadoc) {
+    //noinspection SpellCheckingInspection
+    options.addStringOption('Xdoclint:none', '-quiet')
+  }
+}
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="<<< Configuration to allow publishing using the maven-publish task >>>">
+if (!IS_MULTI_PROJECT) {
+  /* This is the preferred method to re-obfuscate your jar file */
+  jar.finalizedBy('reobfJar')
+} else {
+  /* However if you are in a multi-project build, dev time needs un-obfuscated jar files */
+  publish.dependsOn('reobfJar')
+}
+//</editor-fold>
+
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="<<< Publishing >>>">
+publishing {
+  publications {
+    create("mavenJava", MavenPublication) {
+      it.artifact jar
+    }
+  }
+  repositories {
+    maven {
+      url "file:///${project.projectDir}/repo"
+    }
+  }
+}
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="<<< Licensing >>>">
+license {
+  header rootProject.file('LICENSE-header.txt')
+
+  ext {
+    year = Calendar.getInstance().get(Calendar.YEAR)
+    name = VENDOR
+  }
+
+  mapping {
+    //noinspection GroovyAssignabilityCheck, SpellCheckingInspection
+    java = 'SLASHSTAR_STYLE'
+    md = 'MARKDOWN'
+  }
+
+  headerDefinitions {
+    //<editor-fold defaultstate="collapsed" desc="<<< Markdown >>>">
+    MARKDOWN {
+      firstLine = '\n[MCUnit](https://github.com/ateranimavis/mc-unit)\n\n> '
+      beforeEachLine = '> '
+      endLine = '> '
+      firstLineDetectionPattern = '> '
+      lastLineDetectionPattern = '> '
+      allowBlankLines = false
+      isMultiline = true
+    }
+    //</editor-fold>
+  }
+
+  include 'LICENSE.md'
+  include '**/*.java'
+
+  /* If we vendor files we don't want to remove their license */
+  exclude '**/vendor/**/*.java'
+
+  /* Excluded generated sources */
+  exclude '**/generated/**/*.java'
+}
+
+//<editor-fold defaultstate="collapsed" desc="<<< License LICENSE.md >>>">
+task licenseLicense(type: LicenseCheck) {
+  source = rootProject.file('LICENSE.md')
+}
+tasks.getByName('license').dependsOn('licenseLicense')
+
+task licenseFormatLicense(type: LicenseFormat) {
+  source = rootProject.file('LICENSE.md')
+}
+tasks.getByName('licenseFormat').dependsOn('licenseFormatLicense')
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="<<< Group License Tasks >>>">
+['License', 'Main', 'Test'].forEach {
+  configure(tasks.getByName("license$it")) {
+    group = "license check"
+  }
+  configure(tasks.getByName("licenseFormat$it")) {
+    group = "license format"
+  }
+}
+//</editor-fold>
+
+/* This current auto updates licence headers,
+   use 'license' instead to only check them */
+tasks.getByName('classes').dependsOn('licenseFormat') //TODO: dependsOn('license')
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="<<< Testing >>>">
+tasks.withType(Test).forEach { test ->
+  test.workingDir = WORKING_DIRECTORY
+  test.systemProperty('forge.logging.markers', TEST_FORGE_MARKERS)
+  test.systemProperty('forge.logging.console.level', TEST_FORGE_LEVEL)
+}
+//</editor-fold>

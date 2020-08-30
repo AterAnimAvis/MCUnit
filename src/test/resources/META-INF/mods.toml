@@ -1,0 +1,12 @@
+modLoader = "javafml"
+loaderVersion = "[31,)"
+[[mods]]
+modId = "mc_unit"
+version = "${file.jarVersion}"
+displayName = "MCUnit"
+logoFile = "logo-mc-unit.png"
+credits = "JUnit / Cucumber"
+authors = "AterAnimAvis"
+description = '''
+Automated Testing is Great!
+'''

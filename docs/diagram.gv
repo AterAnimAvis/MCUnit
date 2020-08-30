@@ -1,0 +1,49 @@
+digraph MCUnit {
+    rankdir="TB"
+    newrank="true"
+    
+    subgraph cluster_0 {
+        style=filled;
+        color=lightgrey;
+        node [style=filled,color=white];
+        Runner, RunTests;
+        label = "JUnit Runner";
+    }
+    
+    subgraph cluster_1 {
+        style=filled;
+        color=lightgrey;
+        node [style=filled,color=white];
+        LaunchTesting -> ModLauncher;
+        ModLauncher -> ModLauncherCallback[label="ILaunchPluginService"];
+        ModLauncher -> MinecraftForge;
+        MinecraftForge -> TestModLocator[label="IModLocator"];
+        TestModLocator -> MCUnitMod[label="Provides"];
+        MinecraftForge -> RunningMinecraft;
+        RunningMinecraft -> MCUnitMod[label="EventListener"];
+        label = "ModLauncher";
+    }
+    
+    subgraph cluster_3 {
+        style=filled;
+        color=lightgrey;
+        node [style=filled,color=white];
+        Runner -> MinecraftLauncher -> AwaitingModLauncher -> AwaitingMinecraft;
+        label = "MCUnit";
+    }
+    
+    MinecraftLauncher -> LaunchTesting[label="Seperate Thread"];
+    ModLauncherCallback -> AwaitingModLauncher[label="Provides ClassLoader"];
+    MCUnitMod -> AwaitingMinecraft[label="Notifies Load Complete"];
+    AwaitingMinecraft -> RunTests;
+    
+    Runner [shape=diamond];
+    RunTests [label="Run Tests"];
+    AwaitingMinecraft [label="Awaiting Minecraft"];
+    AwaitingModLauncher [label="Awaiting ModLauncher"];
+    
+    {rank=same; Runner MinecraftLauncher LaunchTesting}
+    {rank=same; AwaitingModLauncher ModLauncherCallback}
+    {rank=same; AwaitingMinecraft MCUnitMod}
+    
+}

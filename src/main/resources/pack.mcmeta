@@ -1,0 +1,7 @@
+{
+    "pack": {
+        "description": "mod resources",
+        "pack_format": 5,
+        "_comment": "Mod Resources for MCUnit's Example Mod"
+    }
+}
