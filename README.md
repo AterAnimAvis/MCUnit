@@ -31,6 +31,14 @@ How it works
 --
 ![](docs/diagram.svg)
 
+Example
+---
+<details>
+<summary>A Sample Run with Cucumber Reporting</summary>
+    
+![](docs/example.gif)
+</details>
+
 Todo List
 ---
 - Work out when to unset the ThreadContext ClassLoader
